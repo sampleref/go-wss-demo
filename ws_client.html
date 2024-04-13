@@ -1,0 +1,71 @@
+<pre id="clientId"/>
+<input id="input" type="text"/>
+<button onclick="sendText()">Send</button>
+<pre id="output"></pre>
+<video id="videoPlayer" autoplay muted controls style="width: 500"> </video>
+<script>
+    const clientIdVal = Math.floor(Math.random() * 9000 + 1000);
+    const clientId = document.getElementById("clientId");
+    clientId.innerHTML += "ClientId: " + clientIdVal + "\n";
+    const input = document.getElementById("input");
+    const output = document.getElementById("output");
+    const socket = new WebSocket("wss://localhost:8080/connect");
+
+    socket.onopen = function () {
+        output.innerHTML += "Status: Connected\n";
+        sendClientId();
+    };
+
+    socket.onmessage = function (e) {
+        console.log("Received: ", e.data)
+        let payload = JSON.parse(e.data);
+        if (payload.type == 'text') {
+            output.innerHTML += "Server: " + payload.message + "\n";
+        } else if (payload.type == 'sdpOffer') {
+            console.log("Handle sdpOffer " + payload.message);
+            handleSDPOffer(payload.message);
+        } else {
+            console.log("Received Invalid Type: ", payload.type)
+        }
+    };
+
+    function handleSDPOffer(sdpOffer){
+        let peerConnection = new RTCPeerConnection();
+        peerConnection.addTransceiver('video', { direction: 'recvonly' })
+
+        peerConnection.ontrack = function (event) {
+            document.getElementById('videoPlayer').srcObject = event.streams[0]
+        }
+        peerConnection.setRemoteDescription({
+            sdp : sdpOffer,
+            type: 'offer'
+        }).then(value => {
+            peerConnection.createAnswer().then(answer =>{
+                peerConnection.setLocalDescription(answer)
+                send(answer.sdp, "sdpAnswer");
+            }).catch(reason => {
+                console.log("Create - answer failure ", reason);
+            })
+        }).catch(reason => {
+            console.log("Offer - answer failure ", reason);
+        });
+    }
+
+    function sendText() {
+        send(input.value, "text");
+        input.value = "";
+    }
+
+    function sendClientId() {
+        send("", "clientId");
+    }
+
+    function send(message, type) {
+        let payload = {
+            message: message,
+            type: type,
+            clientId: clientIdVal + '',
+        }
+        socket.send(JSON.stringify(payload));
+    }
+</script>
