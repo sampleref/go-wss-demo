@@ -21,7 +21,9 @@ whip.sink_0 whipsink name=whip stun-server=stun://stun.l.google.com:19302 whip-e
    skip/continue if any security exception due to unverified cert, 
    since this is only for local testing
 5. Note down `clientId:{}` on webpage, Example: `ClientId: 2685`
-6. Run above GStreamer command which sends video to WHIP endpoint via webrtc, apply above noted clientId in 
+   ![webdemo](https://github.com/sampleref/go-wss-demo/assets/8070420/e49aedd3-cd8b-494d-a888-266ad177b52e)
+
+7. Run above GStreamer command which sends video to WHIP endpoint via webrtc, apply above noted clientId in 
    GStreamer whipsink property whip-endpoint
    Example:
    `gst-launch-1.0 autovideosrc ! videoconvert ! openh264enc ! rtph264pay ! \
