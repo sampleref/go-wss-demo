@@ -1,6 +1,7 @@
 <pre id="clientId"/>
 <input id="input" type="text"/>
 <button onclick="sendText()">Send</button>
+<button onclick="sendRTPOffer()">GenRTPOffer</button>
 <pre id="output"></pre>
 <video id="videoPlayer" autoplay muted controls style="width: 500"> </video>
 <script>
@@ -42,18 +43,29 @@
         }).then(value => {
             peerConnection.createAnswer().then(answer =>{
                 peerConnection.setLocalDescription(answer)
-                send(answer.sdp, "sdpAnswer");
+                console.log("Generated sdpAnswer " + answer.sdp);
+                //send(answer.sdp, "sdpAnswer");
             }).catch(reason => {
                 console.log("Create - answer failure ", reason);
             })
         }).catch(reason => {
             console.log("Offer - answer failure ", reason);
         });
+        peerConnection.onicecandidate = function(iceEvent){ //not firing
+            if(iceEvent.candidate === null){
+                console.log("Final sdpAnswer " + peerConnection.localDescription.sdp);
+                send(peerConnection.localDescription.sdp, "sdpAnswer");
+            }
+        }
     }
 
     function sendText() {
         send(input.value, "text");
         input.value = "";
+    }
+
+    function sendRTPOffer() {
+        send("", "rtpGenerateOffer");
     }
 
     function sendClientId() {

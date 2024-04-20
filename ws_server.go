@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/pion/webrtc/v3"
 	"io"
 	"log"
 	"net/http"
@@ -33,6 +34,7 @@ var wsConnections map[string]*websocket.Conn
 func main() {
 	wsConnections = make(map[string]*websocket.Conn)
 	sdpAnswers = make(map[string]string)
+	clientPeerConnections = make(map[string]*webrtc.PeerConnection)
 
 	go HandleWhipClients()
 	go HandleWebClients()
@@ -154,7 +156,15 @@ func HandleWsMessages(conn *websocket.Conn) {
 			wsConnections[payload.ClientId] = conn
 			break
 		case "sdpAnswer":
-			sdpAnswers[payload.ClientId] = payload.Message
+			if clientPeerConnections[payload.ClientId] != nil {
+				ApplySDPAnswer(payload.ClientId, payload.Message)
+			} else {
+				sdpAnswers[payload.ClientId] = payload.Message
+			}
+			break
+		case "rtpGenerateOffer":
+			offer := ReadRTPAndGenerateSDPOffer(payload.ClientId, 9898)
+			WriteMessage(conn, offer, "sdpOffer")
 			break
 		default:
 			// Print the message to the console

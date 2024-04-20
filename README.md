@@ -29,3 +29,14 @@ whip.sink_0 whipsink name=whip stun-server=stun://stun.l.google.com:19302 whip-e
    `gst-launch-1.0 autovideosrc ! videoconvert ! openh264enc ! rtph264pay ! \
    'application/x-rtp,media=video,encoding-name=H264,payload=97,clock-rate=90000' ! \
    whip.sink_0 whipsink name=whip stun-server=stun://stun.l.google.com:19302 whip-endpoint="http://localhost:8081/whip?clientId=2685"`
+
+## Steps for SRT
+1. Keeping running ffmpeg command from valid SRT source
+   Example: `ffmpeg -i srt://:8888 -c:v copy -tune zerolatency -an -f rtp rtp://127.0.0.1:9898`
+   
+2. Run `go build`
+3. Run `./go-wss-demo`
+4. Open URL `https://localhost:8080/` in browser/chrome
+   skip/continue if any security exception due to unverified cert,
+   since this is only for local testing
+5. Click **GenRTPOffer**
